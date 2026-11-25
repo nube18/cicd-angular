@@ -1,5 +1,6 @@
 name: Angular CI/CD
 
+# Eventos que inician el workflow: push a main y pull requests dirigidas a main.
 on:
   push:
     branches:
@@ -26,9 +27,21 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Tests con cobertura
+        run: npx ng test --no-watch --coverage
+
+      - name: Subir informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
       - name: Compilar Angular
         run: npx ng build --base-href /cicd-angular/
 
+      # En una PR solo se valida; el artefacto se publica únicamente en un push.
       - name: Subir artefacto de Pages
         if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3

@@ -3,21 +3,16 @@ import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
-    }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [App] }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('muestra el título y los dos componentes hijos', () => {
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, cicd-angular');
+    expect(el.querySelector('h1')?.textContent).toContain('Gestor de tareas');
+    expect(el.querySelector('app-contador')).not.toBeNull();
+    expect(el.querySelector('app-lista-tareas')).not.toBeNull();
   });
 });

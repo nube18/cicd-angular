@@ -1,0 +1,12 @@
+<input #entrada type="text" placeholder="Nueva tarea" />
+<button type="button" (click)="agregar(entrada)">Añadir</button>
+
+@if (tareas.length === 0) {
+  <p>No hay tareas</p>
+} @else {
+  <ul>
+    @for (t of tareas; track $index) {
+      <li>{{ t }}</li>
+    }
+  </ul>
+}
