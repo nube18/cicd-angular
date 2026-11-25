@@ -1,33 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { Contador } from './contador';
 
 describe('Contador', () => {
-  let component: Contador;
   let fixture: ComponentFixture<Contador>;
+  let el: HTMLElement;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [Contador],
-    }).compileComponents();
-
+    await TestBed.configureTestingModule({ imports: [Contador] }).compileComponents();
     fixture = TestBed.createComponent(Contador);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
+    el = fixture.nativeElement;
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('muestra el contador inicial en 0', () => {
+    expect(el.querySelector('p')?.textContent).toContain('Contador: 0');
   });
 
-  it('increments the displayed value when the button is clicked', () => {
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('0');
-
-    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
-    button.click();
+  it('incrementa al hacer clic en el botón', () => {
+    const boton = el.querySelector('button') as HTMLButtonElement;
+    boton.click();
+    boton.click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('1');
+    expect(fixture.componentInstance.contador).toBe(2);
+    expect(el.querySelector('p')?.textContent).toContain('Contador: 2');
   });
 });
