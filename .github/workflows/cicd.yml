@@ -1,6 +1,8 @@
 name: Angular CI/CD
 
-# Eventos que inician el workflow: push a main y pull requests dirigidas a main.
+# ON: define los eventos que disparan el workflow.
+# Se ejecuta en cada push a main (CI + despliegue) y en cada pull request
+# dirigida a main (solo CI, para validar antes de fusionar).
 on:
   push:
     branches:
@@ -9,9 +11,14 @@ on:
     branches:
       - main
 
+# JOBS: conjunto de trabajos del workflow. Por defecto se ejecutan en paralelo,
+# salvo que se encadenen con "needs". Aquí hay dos: build (validar y empaquetar)
+# y deploy (publicar).
 jobs:
   build:
     runs-on: ubuntu-latest
+    # PERMISSIONS (job build): principio de mínimo privilegio.
+    # Solo necesita leer el repositorio para descargar el código.
     permissions:
       contents: read
     steps:
@@ -30,6 +37,8 @@ jobs:
       - name: Tests con cobertura
         run: npx ng test --no-watch --coverage
 
+      # IF (step): always() hace que el informe se suba aunque fallen los tests,
+      # para poder consultarlo al depurar.
       - name: Subir informe de cobertura
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,7 +50,8 @@ jobs:
       - name: Compilar Angular
         run: npx ng build --base-href /cicd-angular/
 
-      # En una PR solo se valida; el artefacto se publica únicamente en un push.
+      # IF (step): en una PR solo se valida; el artefacto de Pages
+      # se publica únicamente cuando el evento es un push.
       - name: Subir artefacto de Pages
         if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3
@@ -49,12 +59,21 @@ jobs:
           path: dist/cicd-angular/browser
 
   deploy:
+    # NEEDS: este job espera a que "build" termine correctamente.
+    # Si build falla, deploy no se ejecuta.
     needs: build
+    # IF (job): solo se despliega en un push a la rama main,
+    # nunca en pull requests.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # PERMISSIONS (job deploy): permisos específicos para publicar en Pages.
+    # pages: write permite desplegar; id-token: write permite a deploy-pages
+    # verificar el origen del despliegue mediante OIDC.
     permissions:
       pages: write
       id-token: write
+    # ENVIRONMENT: asocia el job al entorno "github-pages" y expone
+    # la URL publicada en la interfaz de GitHub.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
